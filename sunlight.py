@@ -140,21 +140,21 @@ def read_tracks(names, l):
 
 def vim(tag):
 	# better filename
-	tmp = mkstemp(prefix='sunlight-')[1]
-	z = open(tmp, 'w')
+	tmp = mkstemp(prefix='sunlight-')[0]
+	fd = open(tmp, 'w')
 	for t in tracks:
-		z.write("%s\n" % (t[tag][0]))
-	z.close()
-	#rv = os.system("$EDITOR %s" % tmp)
+		fd.write("%s\n" % (t[tag][0]))
+	fd.close()
 	rv = os.system("$EDITOR " + tmp)
 	if rv:
-		print("err: $EDITOR returned nonzero value: %s" % (rv))
+		print("err: $EDITOR returned nonzero value: " + str(rv))
 		os.remove(tmp)
 		exit(rv)
-	z = open(tmp, 'r')
-	titles = list(z)
+	fd = open(tmp, 'r')
+	titles = list(fd)
 	for i in range(len(files)):
 		add_tag([files[i]], tag, titles[i][:-1])
+	fd.close()
 	os.remove(tmp)
 
 def zeropad():
