@@ -9,8 +9,22 @@ from mutagen.oggvorbis import OggVorbis
 from optparse import OptionParser
 from tempfile import mkstemp
 
-usage_text = "%prog [-a] FILE/DIR"
-info_text = "laziness"
+usage_text = "%prog [-catdnivz] [OPTS] FILE/DIR"
+info_text = """
+sunlight is a tagging swiss army knife for audio files
+
+`sunlight' will print tags for all files in cwd recursively
+passing a file or path will perform operations on those files
+
+`sunlight -i' will edit title tags in $EDITOR
+
+you can omit -a when passing two arguments (regardless of FILE/DIR):
+
+`sunlight comment "Downloaded illegally"' will set the comment
+`sunlight tracknumber' will display the tracknumber
+
+`sunlight -n' will set the filenames akin to "01 - Title.flac"
+"""
 files = []
 atags = []
 vtags = []
@@ -44,7 +58,7 @@ parser.add_option('-a', '--add',    nargs=2, action='callback', callback=set_opt
 parser.add_option('-t', '--tag',    nargs=1, action='callback', callback=set_opt, dest='t', type='string', help='tag TAG')
 parser.add_option('-d', '--delete', nargs=1, action='callback', callback=set_opt, dest='d', type='string', help='delete TAG')
 parser.add_option('-n', '--names',           action='store_true',                 dest='n', help='set filesnames from tags')
-parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='vim title ui')
+parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit [title|TAG] with vim for all files')
 parser.add_option('-z', '--zeropad',         action='store_true',                 dest='z', help='zeropad tracknumbers')
 parser.add_option('-v', '--verbose',         action='store_true',                 dest='v', help='verbose')
 opt, par = parser.parse_args()
@@ -126,15 +140,16 @@ def pptags(tracks, tags):
 
 def proper_names(tracks):
 	for f in tracks:
-		if opt.v: print("%s/%s - %s.%s" % (os.path.dirname(f.filename), f['tracknumber'][0], f['title'][0], ext(f.filename)))
-		os.rename(f.filename, "%s/%s - %s.%s" % (os.path.dirname(f.filename), f['tracknumber'][0], f['title'][0], ext(f.filename)))
+		if opt.v: print("%s/%s - %s.%s" % (os.path.dirname(f.filename),
+			        f['tracknumber'][0], f['title'][0], ext(f.filename)))
+		os.rename(f.filename, "%s/%s - %s.%s" % (os.path.dirname(f.filename),
+			  f['tracknumber'][0], f['title'][0], ext(f.filename)))
 
 def read_tracks(names, l):
 	for n in names:
 		l.append(open_vorbis(n))
 
 def vim(tag):
-	# better filename
 	tmp = mkstemp(prefix='sunlight-')[1]
 	fd = open(tmp, 'w')
 	for t in tracks:
@@ -160,7 +175,8 @@ if not par:
 	par = [os.getcwd()]
 if os.path.isdir(par[0]) or os.path.isfile(par[0]):
 	add_files(files, par)
-elif is_tag(par[0]):	# enables 'sunlight title' to show title, 'sunlight title dog' to set title = dog
+# enables 'sunlight title' to show title, 'sunlight title dog' to set title = dog
+elif is_tag(par[0]):
 	for x in my_tags:
 		if match(par[0], x):
 			opt.a = [(x, par[1])]
