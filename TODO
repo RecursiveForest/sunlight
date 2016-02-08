@@ -2,3 +2,9 @@
 - regex replace
 - programmatic output
 - pretty output
+- assume I want files in cwd recursively if no flacs given
+- "sunlight add discnumber 1" & "sunlight -a discnumber 1" ideally
+- `sunlight --comment' or something similar (terser) to set comment to "What.CD FLAC <pull from xclip>".
+	Ask for confirmation. (Single y/n press.)
+- vim mode: dump titles into a file, edit with vim, slurp back files at vim exit
+- tab completion on the command line
