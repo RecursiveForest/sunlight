@@ -67,14 +67,12 @@ def add_files(f, paths):
 	f.sort()
 
 def add_tag(files, tag, val):
-	for fil in files:
-		f = open_vorbis(fil)
+	for f in files:
 		f[tag] = val
 		f.save()
 
 def delete_tag(files, tag):
-	for fil in files:
-		f = open_vorbis(fil)
+	for f in files:
 		for t in tag:
 			f.__delitem__(t)
 		f.save()
@@ -91,16 +89,14 @@ def open_vorbis(f):
 	if fnmatch(f.lower(), '*.ogg'):
 		return OggVorbis(f)
 
-def ptags(files, tags):
-	for fil in files:
-		print(fil)
-		f = open_vorbis(fil)
+def ptags(tracks, tags):
+	for f in tracks:
 		tags = tags if tags else f.tags.keys()
 		for t in tags:
 			print("\t%s: %s" % (t, f.tags[t][0]))
 		print()
 
-def pptags(files, tags):
+def pptags(tracks, tags):
 	com_tags = {}
 	maxtaglen = 0
 	for f in tracks:
@@ -128,11 +124,10 @@ def pptags(files, tags):
 			if not com_tags[t]:
 				print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]))
 
-def proper_names(files):
-	for fil in files:
-		f = open_vorbis(fil)
-		if opt.v: print("%s/%s - %s.%s" % (os.path.dirname(fil), f['tracknumber'][0], f['title'][0], ext(fil)))
-		os.rename(fil, "%s/%s - %s.%s" % (os.path.dirname(fil), f['tracknumber'][0], f['title'][0], ext(fil)))
+def proper_names(tracks):
+	for f in tracks:
+		if opt.v: print("%s/%s - %s.%s" % (os.path.dirname(f.filename), f['tracknumber'][0], f['title'][0], ext(f.filename)))
+		os.rename(f.filename, "%s/%s - %s.%s" % (os.path.dirname(f.filename), f['tracknumber'][0], f['title'][0], ext(f.filename)))
 
 def read_tracks(names, l):
 	for n in names:
@@ -140,7 +135,7 @@ def read_tracks(names, l):
 
 def vim(tag):
 	# better filename
-	tmp = mkstemp(prefix='sunlight-')[0]
+	tmp = mkstemp(prefix='sunlight-')[1]
 	fd = open(tmp, 'w')
 	for t in tracks:
 		fd.write("%s\n" % (t[tag][0]))
@@ -152,15 +147,14 @@ def vim(tag):
 		exit(rv)
 	fd = open(tmp, 'r')
 	titles = list(fd)
-	for i in range(len(files)):
-		add_tag([files[i]], tag, titles[i][:-1])
+	for i in range(len(tracks)):
+		add_tag([tracks[i]], tag, titles[i][:-1])
 	fd.close()
 	os.remove(tmp)
 
 def zeropad():
-	for fil in files:
-		f = open_vorbis(fil)
-		add_tag([fil], 'tracknumber', f['tracknumber'][0].zfill(2))
+	for t in tracks:
+		add_tag([t], 'tracknumber', t['tracknumber'][0].zfill(2))
 
 if not par:
 	par = [os.getcwd()]
@@ -187,17 +181,17 @@ if opt.i:
 	vim('title')
 	exit()
 if opt.t:
-	ptags(files, opt.t)
+	ptags(tracks, opt.t)
 if opt.a:
 	for g, v in opt.a:
 		print("setting %s = %s" % (g, v))
-		add_tag(files, g, v)
-		if opt.v: ptags(files, None)
+		add_tag(tracks, g, v)
+		if opt.v: ptags(tracks, None)
 if opt.d:
 	print("deleting tag %s" % (opt.d))
-	delete_tag(files, opt.d)
+	delete_tag(tracks, opt.d)
 if opt.n:
 	print("setting proper filenames.")
-	proper_names(files)
+	proper_names(tracks)
 if not opt.t and not opt.n:
-	pptags(files, None)
+	pptags(tracks, None)
