@@ -16,12 +16,19 @@ info_text = """
 
 passing a file or path will perform operations on those files
 
-`sunlight -i' will edit title tags in $EDITOR
+`sunlight -i' will edit tags in $EDITOR, one file at a time
 
-you can omit -a when passing two arguments (regardless of FILE/DIR):
+`sunlight -i -t title' will edit a single tag in $EDITOR, all
+files at once
+
+you can omit -a when passing two arguments (regardless of FILE/DIR)
+if the tags are recognised:
 
 `sunlight comment "Downloaded illegally"' will set the comment
 `sunlight tracknumber' will display the tracknumber
+
+editing my_tags will change which tags are "recognised" for the
+above shorthand
 
 `sunlight -n' will set the filenames akin to "01 - Title.flac"
 """

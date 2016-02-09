@@ -1,0 +1,35 @@
+sunlight is a tagging swiss army knife for audio files
+
+Usage: sunlight.py [-catdnivz] [OPTS] [FILE/DIR]
+
+Options:
+  --version          show program's version number and exit
+  -h, --help         show this help message and exit
+  -c C, --copy=C     copy TAG SRC
+  -a A, --add=A      add TAG VAL
+  -t T, --tag=T      tag TAG
+  -d D, --delete=D   delete TAG
+  -n, --names        set filesnames from tags
+  -i, --interactive  edit [title|TAG] with $EDITOR for all files
+  -z, --zeropad      zeropad tracknumbers
+  -v, --verbose      verbose
+
+`sunlight' will print tags for all files in cwd recursively
+
+passing a file or path will perform operations on those files
+
+`sunlight -i' will edit tags in $EDITOR, one file at a time
+
+`sunlight -i -t title' will edit a single tag in $EDITOR, all
+files at once
+
+you can omit -a when passing two arguments (regardless of FILE/DIR)
+if the tags are recognised:
+
+`sunlight comment "Downloaded illegally"' will set the comment
+`sunlight tracknumber' will display the tracknumber
+
+editing my_tags will change which tags are "recognised" for the
+above shorthand
+
+`sunlight -n' will set the filenames akin to "01 - Title.flac"
