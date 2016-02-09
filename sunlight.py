@@ -121,6 +121,9 @@ def pptags(tracks, tags):
 					com_tags[t] = None
 			else:
 				com_tags[t] = f.tags[t][0]
+		for t in com_tags:
+			if t not in f.tags:
+				com_tags[t] = None
 	for t in com_tags.keys():
 		if com_tags[t]:
 			if len(t) > maxtaglen: maxtaglen = len(t)
