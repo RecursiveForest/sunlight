@@ -65,7 +65,7 @@ parser.add_option('-a', '--add',    nargs=2, action='callback', callback=set_opt
 parser.add_option('-t', '--tag',    nargs=1, action='callback', callback=set_opt, dest='t', type='string', help='tag TAG')
 parser.add_option('-d', '--delete', nargs=1, action='callback', callback=set_opt, dest='d', type='string', help='delete TAG')
 parser.add_option('-n', '--names',           action='store_true',                 dest='n', help='set filesnames from tags')
-parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit [title|TAG] with $EDITOR for all files')
+parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit tags with $EDITOR, combines with -t')
 parser.add_option('-z', '--zeropad',         action='store_true',                 dest='z', help='zeropad tracknumbers')
 parser.add_option('-v', '--verbose',         action='store_true',                 dest='v', help='verbose')
 opt, par = parser.parse_args()

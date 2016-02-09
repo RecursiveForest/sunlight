@@ -10,7 +10,7 @@ Options:
   -t T, --tag=T      tag TAG
   -d D, --delete=D   delete TAG
   -n, --names        set filesnames from tags
-  -i, --interactive  edit [title|TAG] with $EDITOR for all files
+  -i, --interactive  edit tags with $EDITOR, combines with -t
   -z, --zeropad      zeropad tracknumbers
   -v, --verbose      verbose
 
