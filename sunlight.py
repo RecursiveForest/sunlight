@@ -99,6 +99,21 @@ def delete_tag(files, tag):
 def ext(f):
 	return split("\.", f)[-1]
 
+def interactive(track, tags, out, parse):
+	tmp = mkstemp(prefix='sunlight-')[1]
+	fd = open(tmp, 'w')
+	out(fd, track, tags)
+	fd.close()
+	rv = os.system("$EDITOR " + tmp)
+	if rv:
+		print("err: $EDITOR returned nonzero value: " + str(rv))
+		os.remove(tmp)
+		exit(rv)
+	fd = open(tmp, 'r')
+	parse(list(fd), track, tags)
+	fd.close()
+	os.remove(tmp)
+
 def is_tag(t):
 	return t in my_tags or any([match(t, x) for x in my_tags])
 
@@ -156,22 +171,6 @@ def proper_names(tracks):
 def read_tracks(names, l):
 	for n in names:
 		l.append(open_vorbis(n))
-
-def interactive(track, tags, out, parse):
-	tmp = mkstemp(prefix='sunlight-')[1]
-	fd = open(tmp, 'w')
-	out(fd, track, tags)
-	fd.close()
-	rv = os.system("$EDITOR " + tmp)
-	if rv:
-		print("err: $EDITOR returned nonzero value: " + str(rv))
-		os.remove(tmp)
-		exit(rv)
-	fd = open(tmp, 'r')
-	lines = list(fd)
-	parse(lines, track, tags)
-	fd.close()
-	os.remove(tmp)
 
 def zeropad():
 	for t in tracks:
