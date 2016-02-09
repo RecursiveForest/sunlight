@@ -9,11 +9,11 @@ from mutagen.oggvorbis import OggVorbis
 from optparse import OptionParser
 from tempfile import mkstemp
 
-usage_text = "%prog [-catdnivz] [OPTS] FILE/DIR"
+usage_text = "%prog [-catdnivz] [OPTS] [FILE/DIR]"
+description="sunlight is a tagging swiss army knife for audio files"
 info_text = """
-sunlight is a tagging swiss army knife for audio files
-
 `sunlight' will print tags for all files in cwd recursively
+
 passing a file or path will perform operations on those files
 
 `sunlight -i' will edit title tags in $EDITOR
@@ -52,13 +52,13 @@ def set_opt(o, opt, v, p):
 		a = [v]
 	setattr(p.values, o.dest, a)
 
-parser = OptionParser(usage=usage_text, version="0.1", epilog="laziness")
+parser = OptionParser(usage=usage_text, version="0.1", description=description, epilog=info_text)
 parser.add_option('-c', '--copy',   nargs=2, action='callback', callback=set_opt, dest='c', type='string', help='copy TAG SRC')
 parser.add_option('-a', '--add',    nargs=2, action='callback', callback=set_opt, dest='a', type='string', help='add TAG VAL')
 parser.add_option('-t', '--tag',    nargs=1, action='callback', callback=set_opt, dest='t', type='string', help='tag TAG')
 parser.add_option('-d', '--delete', nargs=1, action='callback', callback=set_opt, dest='d', type='string', help='delete TAG')
 parser.add_option('-n', '--names',           action='store_true',                 dest='n', help='set filesnames from tags')
-parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit [title|TAG] with vim for all files')
+parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit [title|TAG] with $EDITOR for all files')
 parser.add_option('-z', '--zeropad',         action='store_true',                 dest='z', help='zeropad tracknumbers')
 parser.add_option('-v', '--verbose',         action='store_true',                 dest='v', help='verbose')
 opt, par = parser.parse_args()
@@ -75,9 +75,9 @@ def add_files(f, paths):
 		elif os.path.isfile(p):
 			f.append(p)
 		elif os.path.exists(p):
-			sys.exit("File/dir %s does not exist. Get your act together." % p)
+			sys.exit("File/dir %s does not exist." % p)
 		else:
-			sys.exit("%s isn't a file or a dir, what the fuck?" % p)
+			sys.exit("%s isn't a file or a dir" % p)
 	f.sort()
 
 def add_tag(files, tag, val):
@@ -114,10 +114,10 @@ def pptags(tracks, tags):
 	com_tags = {}
 	maxtaglen = 0
 	for f in tracks:
-		tags = tags if tags else f.tags.keys()
-		for t in tags:
+		ts = tags if tags else f.tags.keys()
+		for t in ts:
 			if t in com_tags:
-				if com_tags[t] != f.tags[t][0]:
+				if t not in f.tags or com_tags[t] != f.tags[t][0]:
 					com_tags[t] = None
 			else:
 				com_tags[t] = f.tags[t][0]
@@ -131,10 +131,10 @@ def pptags(tracks, tags):
 	maxtaglen = 0
 	for f in tracks:
 		print(os.path.basename(f.filename))
-		tags = tags if tags else f.tags.keys()
-		for t in tags:
+		ts = tags if tags else f.tags.keys()
+		for t in ts:
 			if len(t) > maxtaglen: maxtaglen = len(t)
-		for t in sorted(tags):
+		for t in sorted(ts):
 			if not com_tags[t]:
 				print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]))
 
@@ -149,11 +149,10 @@ def read_tracks(names, l):
 	for n in names:
 		l.append(open_vorbis(n))
 
-def vim(tag):
+def interactive(track, tags, out, parse):
 	tmp = mkstemp(prefix='sunlight-')[1]
 	fd = open(tmp, 'w')
-	for t in tracks:
-		fd.write("%s\n" % (t[tag][0]))
+	out(fd, track, tags)
 	fd.close()
 	rv = os.system("$EDITOR " + tmp)
 	if rv:
@@ -161,9 +160,8 @@ def vim(tag):
 		os.remove(tmp)
 		exit(rv)
 	fd = open(tmp, 'r')
-	titles = list(fd)
-	for i in range(len(tracks)):
-		add_tag([tracks[i]], tag, titles[i][:-1])
+	lines = list(fd)
+	parse(lines, track, tags)
 	fd.close()
 	os.remove(tmp)
 
@@ -184,7 +182,7 @@ elif is_tag(par[0]):
 		par.append(os.getcwd())
 	add_files(files, par[2:])
 else:
-	print("%s is neither a valid path or a recognised tag, exiting." % par[0])
+	print("%s is neither a valid path or a recognised tag" % par[0])
 	exit()
 if not files:
 	print("No files present, exiting.")
@@ -194,7 +192,24 @@ if opt.z:
 	zeropad()
 	exit()
 if opt.i:
-	vim('title')
+	if opt.t != None and len(opt.t) == 1:
+		interactive(None, opt.t,
+			lambda fd, tr, tags:
+				[fd.write("%s\n" % (t[tags[0]][0]))
+				for t in tracks],
+			lambda ls, tr, tags:
+				[add_tag([tracks[i]], tags[0], ls[i][:-1])
+				for i in range(len(tracks))])
+	else:
+		def out(fd, track, tags):
+			tags = tags if tags else track.tags.keys()
+			[fd.write("%s: %s\n" % (t, track[t][0])) for t in tags]
+		for t in tracks:
+			interactive(t, opt.t, out,
+				lambda ls, tr, tags:
+					[add_tag([tr],
+					*split(": ", l[:-1], maxsplit=1))
+					for l in ls])
 	exit()
 if opt.t:
 	ptags(tracks, opt.t)
