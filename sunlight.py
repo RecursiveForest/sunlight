@@ -33,8 +33,6 @@ above shorthand
 `sunlight -n' will set the filenames akin to "01 - Title.flac"
 """
 files = []
-atags = []
-vtags = []
 tracks = []
 
 my_tags = [
