@@ -93,7 +93,7 @@ def add_tag(files, tag, val):
 def delete_tag(files, tag):
 	for f in files:
 		for t in tag:
-			f.__delitem__(t)
+			if t in f.tags: f.__delitem__(t)
 		f.save()
 
 def ext(f):
