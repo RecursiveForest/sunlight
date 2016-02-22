@@ -64,6 +64,7 @@ parser.add_option('-t', '--tag',    nargs=1, action='callback', callback=set_opt
 parser.add_option('-d', '--delete', nargs=1, action='callback', callback=set_opt, dest='d', type='string', help='delete TAG')
 parser.add_option('-n', '--names',           action='store_true',                 dest='n', help='set filesnames from tags')
 parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit tags with $EDITOR, combines with -t')
+parser.add_option('-f', '--fuck',            action='store_true',                 dest='f', help='please find a better name for this argument')
 parser.add_option('-z', '--zeropad',         action='store_true',                 dest='z', help='zeropad tracknumbers')
 parser.add_option('-v', '--verbose',         action='store_true',                 dest='v', help='verbose')
 opt, par = parser.parse_args()
@@ -130,7 +131,7 @@ def ptags(tracks, tags):
 			print("\t%s: %s" % (t, f.tags[t][0]))
 		print()
 
-def pptags(tracks, tags):
+def pptags(tracks, tags, o=sys.stdout):
 	com_tags = {}
 	maxtaglen = 0
 	for f in tracks:
@@ -149,17 +150,17 @@ def pptags(tracks, tags):
 			if len(t) > maxtaglen: maxtaglen = len(t)
 	for t in sorted(com_tags.keys()):
 		if com_tags[t]:
-			print("%s%s" % (t.ljust(maxtaglen+1), com_tags[t]))
-	print()
+			print("%s%s" % (t.ljust(maxtaglen+1), com_tags[t]), file=o)
+	print(file=o)
 	maxtaglen = 0
 	for f in tracks:
-		print(os.path.basename(f.filename))
+		print(os.path.basename(f.filename), file=o)
 		ts = tags if tags else f.tags.keys()
 		for t in ts:
 			if len(t) > maxtaglen: maxtaglen = len(t)
 		for t in sorted(ts):
 			if not com_tags[t]:
-				print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]))
+				print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]), file=o)
 
 def proper_names(tracks):
 	for f in tracks:
@@ -199,7 +200,13 @@ if opt.z:
 	zeropad()
 	exit()
 if opt.i:
-	if opt.t != None and len(opt.t) == 1:
+	if opt.f:
+		def out(fd, tr, tags):
+			pptags(tracks, tags, o=fd)
+		def parse(ls, tr, tags):
+			pass
+		interactive(None, None, out, parse)
+	elif opt.t != None and len(opt.t) == 1:
 		interactive(None, opt.t,
 			lambda fd, tr, tags:
 				[fd.write("%s\n" % (t[tags[0]][0]))
