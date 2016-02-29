@@ -8,3 +8,5 @@
 	Ask for confirmation. (Single y/n press.)
 - vim mode: dump titles into a file, edit with vim, slurp back files at vim exit
 - tab completion on the command line
+
+- no-recurse option

@@ -173,7 +173,7 @@ def read_tracks(names, l):
 	for n in names:
 		l.append(open_vorbis(n))
 
-def zeropad():
+def zeropad(tracks):
 	for t in tracks:
 		add_tag([t], 'tracknumber', t['tracknumber'][0].zfill(2))
 
@@ -197,7 +197,7 @@ if not files:
 	exit()
 read_tracks(files, tracks)
 if opt.z:
-	zeropad()
+	zeropad(tracks)
 	exit()
 if opt.i:
 	if opt.f:
