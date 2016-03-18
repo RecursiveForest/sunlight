@@ -7,9 +7,11 @@ from fnmatch import fnmatch
 from mutagen.flac import FLAC
 from mutagen.oggvorbis import OggVorbis
 from optparse import OptionParser
+import argparse
 from tempfile import mkstemp
 
-usage_text = "%prog [-catdnivz] [OPTS] [FILE/DIR]"
+VERSION = '0.1'
+usage_text = "%(prog)s [-catdnivz] [OPTS] [FILE/DIR]"
 description="sunlight is a tagging swiss army knife for audio files"
 info_text = """
 `sunlight' will print tags for all files in cwd recursively
@@ -49,25 +51,34 @@ my_tags = [
 	'tracknumber'
 ]
 
-def set_opt(o, opt, v, p):
-	a = getattr(p.values, o.dest)
-	if isinstance(a, list):
-		a.append(v)
-	else:
-		a = [v]
-	setattr(p.values, o.dest, a)
+#class EncoderArg(argparse.Action):
+#	def __init__(self, option_strings, dest, nargs=None, **kwargs):
+#		super(EncoderArg, self).__init__(option_strings, dest, nargs, **kwargs)
+#	def __call__(self, parser, namespace, values, option_string=None):
+#		if isinstance(p.values, list):
 
-parser = OptionParser(usage=usage_text, version="0.1", description=description, epilog=info_text)
-parser.add_option('-c', '--copy',   nargs=2, action='callback', callback=set_opt, dest='c', type='string', help='copy TAG SRC')
-parser.add_option('-a', '--add',    nargs=2, action='callback', callback=set_opt, dest='a', type='string', help='add TAG VAL')
-parser.add_option('-t', '--tag',    nargs=1, action='callback', callback=set_opt, dest='t', type='string', help='tag TAG')
-parser.add_option('-d', '--delete', nargs=1, action='callback', callback=set_opt, dest='d', type='string', help='delete TAG')
-parser.add_option('-n', '--names',           action='store_true',                 dest='n', help='set filesnames from tags')
-parser.add_option('-i', '--interactive',     action='store_true',                 dest='i', help='edit tags with $EDITOR, combines with -t')
-parser.add_option('-f', '--fuck',            action='store_true',                 dest='f', help='please find a better name for this argument')
-parser.add_option('-z', '--zeropad',         action='store_true',                 dest='z', help='zeropad tracknumbers')
-parser.add_option('-v', '--verbose',         action='store_true',                 dest='v', help='verbose')
-opt, par = parser.parse_args()
+#def set_opt(o, opt, v, p):
+#	a = getattr(p.values, o.dest)
+#	if isinstance(a, list):
+#		a.append(v)
+#	else:
+#		a = [v]
+#	setattr(p.values, o.dest, a)
+
+def setup_parser():
+	p = argparse.ArgumentParser(usage=usage_text, description=description, epilog=info_text)
+	p.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+	p.add_argument('-c', '--copy',   nargs=2, action='append', dest='c', help='copy TAG SRC')
+	p.add_argument('-a', '--add',    nargs=2, action='append', dest='a', help='add TAG VAL')
+	p.add_argument('-t', '--tag',    nargs=1, action='append', dest='t', help='tag TAG')
+	p.add_argument('-d', '--delete', nargs=1, action='append', dest='d', help='delete TAG')
+	p.add_argument('-n', '--names',           action='store_true', dest='n', help='set filesnames from tags')
+	p.add_argument('-i', '--interactive',     action='store_true', dest='i', help='edit tags with $EDITOR, combines with -t')
+	p.add_argument('-f', '--fuck',            action='store_true', dest='f', help='please find a better name for this argument')
+	p.add_argument('-z', '--zeropad',         action='store_true', dest='z', help='zeropad tracknumbers')
+	p.add_argument('-v', '--verbose',         action='store_true', dest='v', help='verbose')
+	p.add_argument('files', nargs='*', help='files to edit')
+	return p
 
 def add_files(f, paths):
 	for p in paths:
@@ -177,20 +188,26 @@ def zeropad(tracks):
 	for t in tracks:
 		add_tag([t], 'tracknumber', t['tracknumber'][0].zfill(2))
 
-if not par:
-	par = [os.getcwd()]
-if os.path.isdir(par[0]) or os.path.isfile(par[0]):
-	add_files(files, par)
+parser = setup_parser()
+opt = parser.parse_args()
+if opt.t: opt.t = [i[0] for i in opt.t]
+if opt.a: opt.a = [i[0] for i in opt.a]
+if opt.d: opt.d = [i[0] for i in opt.d]
+if opt.c: opt.c = [i[0] for i in opt.c]
+if not opt.files:
+	opt.files = [os.getcwd()]
+if os.path.isdir(opt.files[0]) or os.path.isfile(opt.files[0]):
+	add_files(files, opt.files)
 # enables 'sunlight title' to show title, 'sunlight title dog' to set title = dog
-elif is_tag(par[0]):
+elif is_tag(opt.files[0]):
 	for x in my_tags:
-		if match(par[0], x):
-			opt.a = [(x, par[1])]
-	if len(par) == 2:
-		par.append(os.getcwd())
-	add_files(files, par[2:])
+		if match(opt.files[0], x):
+			opt.a = [(x, opt.files[1])]
+	if len(opt.files) == 2:
+		opt.files.append(os.getcwd())
+	add_files(files, opt.files[2:])
 else:
-	print("%s is neither a valid path or a recognised tag" % par[0])
+	print("%s is neither a valid path or a recognised tag" % opt.files[0])
 	exit()
 if not files:
 	print("No files present, exiting.")
@@ -207,10 +224,13 @@ if opt.i:
 			pass
 		interactive(None, None, out, parse)
 	elif opt.t != None and len(opt.t) == 1:
-		interactive(None, opt.t,
-			lambda fd, tr, tags:
-				[fd.write("%s\n" % (t[tags[0]][0]))
-				for t in tracks],
+		def out(fd, tr, tags):
+			for t in tracks:
+				if tags[0] in t:
+					fd.write("%s\n" % (t.get(tags[0])[0]))
+				else:
+					fd.write("\n")
+		interactive(None, opt.t, out,
 			lambda ls, tr, tags:
 				[add_tag([tracks[i]], tags[0], ls[i][:-1])
 				for i in range(len(tracks))])
@@ -226,7 +246,7 @@ if opt.i:
 					for l in ls])
 	exit()
 if opt.t:
-	ptags(tracks, opt.t)
+	pptags(tracks, opt.t)
 if opt.a:
 	for g, v in opt.a:
 		print("setting %s = %s" % (g, v))
