@@ -176,9 +176,9 @@ def pptags(tracks, tags, o=sys.stdout):
 def proper_names(tracks):
 	for f in tracks:
 		if opt.v: print("%s/%s - %s.%s" % (os.path.dirname(f.filename),
-			        f['tracknumber'][0], f['title'][0], ext(f.filename)))
+			        f['tracknumber'][0], f['title'][0], ext(f.filename).lower()))
 		os.rename(f.filename, "%s/%s - %s.%s" % (os.path.dirname(f.filename),
-			  f['tracknumber'][0], f['title'][0], ext(f.filename)))
+			  f['tracknumber'][0], f['title'][0], ext(f.filename).lower()))
 
 def read_tracks(names, l):
 	for n in names:
@@ -227,7 +227,7 @@ if opt.i:
 		def out(fd, tr, tags):
 			for t in tracks:
 				if tags[0] in t:
-					fd.write("%s\n" % (t.get(tags[0])[0]))
+					fd.write("%s\n" % (t[tags[0]][0]))
 				else:
 					fd.write("\n")
 		interactive(None, opt.t, out,
