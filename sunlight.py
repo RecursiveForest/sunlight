@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import os
 import sys
 from re import split, match
@@ -176,9 +177,11 @@ def pptags(tracks, tags, o=sys.stdout):
 def proper_names(tracks):
 	for f in tracks:
 		if opt.v: print("%s/%s - %s.%s" % (os.path.dirname(f.filename),
-			        f['tracknumber'][0], f['title'][0], ext(f.filename).lower()))
+			        f['tracknumber'][0], re.sub("/", "_", f['title'][0]),
+                                ext(f.filename).lower()))
 		os.rename(f.filename, "%s/%s - %s.%s" % (os.path.dirname(f.filename),
-			  f['tracknumber'][0], f['title'][0], ext(f.filename).lower()))
+			        f['tracknumber'][0], re.sub("/", "_", f['title'][0]),
+                                ext(f.filename).lower()))
 
 def read_tracks(names, l):
 	for n in names:
