@@ -163,23 +163,23 @@ def pptags(tracks, tags, o=sys.stdout):
 			if len(t) > maxtaglen: maxtaglen = len(t)
 	for t in sorted(com_tags.keys()):
 		if com_tags[t]:
-                        if opt.b:
-			    print("%s" % (com_tags[t]), file=o)
-                        else:
-			    print("%s%s" % (t.ljust(maxtaglen+1), com_tags[t]), file=o)
+			if opt.b:
+				print("%s" % (com_tags[t]), file=o)
+			else:
+				print("%s%s" % (t.ljust(maxtaglen+1), com_tags[t]), file=o)
 	print(file=o)
 	maxtaglen = 0
 	for f in tracks:
-                if not opt.b: print(os.path.basename(f.filename), file=o)
+		if not opt.b: print(os.path.basename(f.filename), file=o)
 		ts = tags if tags else f.tags.keys()
 		for t in ts:
 			if len(t) > maxtaglen: maxtaglen = len(t)
 		for t in sorted(ts):
 			if not com_tags[t]:
-                            if opt.b:
-				print("%s" % (f.tags[t][0]), file=o)
-                            else:
-				print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]), file=o)
+				if opt.b:
+					print("%s" % (f.tags[t][0]), file=o)
+				else:
+					print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]), file=o)
 
 def proper_names(tracks):
 	for f in tracks:
