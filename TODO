@@ -10,3 +10,5 @@
 - tab completion on the command line
 
 - no-recurse option
+
++ -n for multi-artist folder should set "01 - Drudkh - Whatever.flac".

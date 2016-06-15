@@ -73,6 +73,7 @@ def setup_parser():
 	p.add_argument('-a', '--add',    nargs=2, action='append', dest='a', help='add TAG VAL')
 	p.add_argument('-t', '--tag',    nargs=1, action='append', dest='t', help='tag TAG')
 	p.add_argument('-d', '--delete', nargs=1, action='append', dest='d', help='delete TAG')
+	p.add_argument('-b', '--bare',            action='store_true', dest='b', help='return only TAG, requires -t')
 	p.add_argument('-n', '--names',           action='store_true', dest='n', help='set filesnames from tags')
 	p.add_argument('-i', '--interactive',     action='store_true', dest='i', help='edit tags with $EDITOR, combines with -t')
 	p.add_argument('-f', '--fuck',            action='store_true', dest='f', help='please find a better name for this argument')
@@ -162,16 +163,22 @@ def pptags(tracks, tags, o=sys.stdout):
 			if len(t) > maxtaglen: maxtaglen = len(t)
 	for t in sorted(com_tags.keys()):
 		if com_tags[t]:
-			print("%s%s" % (t.ljust(maxtaglen+1), com_tags[t]), file=o)
+                        if opt.b:
+			    print("%s" % (com_tags[t]), file=o)
+                        else:
+			    print("%s%s" % (t.ljust(maxtaglen+1), com_tags[t]), file=o)
 	print(file=o)
 	maxtaglen = 0
 	for f in tracks:
-		print(os.path.basename(f.filename), file=o)
+                if not opt.b: print(os.path.basename(f.filename), file=o)
 		ts = tags if tags else f.tags.keys()
 		for t in ts:
 			if len(t) > maxtaglen: maxtaglen = len(t)
 		for t in sorted(ts):
 			if not com_tags[t]:
+                            if opt.b:
+				print("%s" % (f.tags[t][0]), file=o)
+                            else:
 				print("\t%s%s" % (t.ljust(maxtaglen+1), f.tags[t][0]), file=o)
 
 def proper_names(tracks):
